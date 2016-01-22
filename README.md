@@ -20,7 +20,7 @@ Write system call in synchronous mode on an ext3 file system, waiting for the jo
     [<ffffffff810fcfae>] vfs_write+0xce/0x140
     [<ffffffff810fd123>] sys_write+0x53/0xa0
 
-Caught a synchronous write doing IOs:
+Caught a synchronous write doing IOs (waiting for the ext3 barrier to complete)
 
     D+       30790 freedge  blkdev_issue_flus dd if=/dev/zero of=todel count=1000 bs=4096 conv=notrunc oflag=dsync
     Thu Jan 21 11:42:46 MET 2016
@@ -33,7 +33,7 @@ Caught a synchronous write doing IOs:
     [<ffffffff810fcfae>] vfs_write+0xce/0x140
     [<ffffffff810fd123>] sys_write+0x53/0xa0
 
-Who knows :)
+A synchronous write waiting for its pages to be written
 
     D+       10340 freedge  sync_page         dd if=/dev/zero of=todel count=10 bs=4096 conv=notrunc oflag=dsync
     ===== 10340
