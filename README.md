@@ -6,6 +6,9 @@ Run every second for 1000 times and display the waiting channel of uninterruptib
 of the processes in uninterruptible state owned by the current user.
 
 Explanation:
+------------
+
+Following traces use SLES11 SP3 and SP4 with default file system (ext3 with data=ordered and barrier enabled).
 
 Write system call in synchronous mode on an ext3 file system, waiting for the journaling thread to commit the metadata
 
@@ -69,4 +72,39 @@ An fsync caught waiting for the journaling thread to finish:
     [<ffffffff811219fb>] sys_fsync+0xb/0x20
 
 
+An *asynchronous* write blocked for some reason? (stable writeback pages?) Under 3.0.101-63-default. This one was run as root and dumped the journaling thread stack as well.
 
+    D          337 root     get_request_wait  [kjournald]
+    D+        5074 root     sleep_on_buffer   dd if=/dev/zero of=zer count=10 bs=4096 conv=notrunc,fdatasync
+    Sat Jan 23 09:51:29 CET 2016
+    ===== 337
+    [<ffffffff8122c9a9>] get_request_wait+0x119/0x1c0
+    [<ffffffff8122cbd6>] __make_request+0x186/0x420
+    [<ffffffff8122b2cb>] generic_make_request+0x45b/0x560
+    [<ffffffff8122b428>] submit_bio+0x58/0xf0
+    [<ffffffff8118b51f>] _submit_bh+0x11f/0x180
+    [<ffffffffa018171e>] journal_submit_data_buffers+0x39e/0x3c0 [jbd]
+    [<ffffffffa0181a45>] journal_commit_transaction+0x305/0xe20 [jbd]
+    [<ffffffffa018632b>] kjournald+0xdb/0x230 [jbd]
+    [<ffffffff81084496>] kthread+0x96/0xa0
+    [<ffffffff81470564>] kernel_thread_helper+0x4/0x10
+    ===== 5074
+    [<ffffffff8118c959>] sleep_on_buffer+0x9/0x10
+    [<ffffffff8118d2d8>] __sync_dirty_buffer+0xa8/0xd0
+    [<ffffffffa018102b>] journal_dirty_data+0x1db/0x230 [jbd]
+    [<ffffffffa01a2d4d>] ext3_journal_dirty_data+0x1d/0x50 [ext3]
+    [<ffffffffa01a17db>] walk_page_buffers+0x4b/0xb0 [ext3]
+    [<ffffffffa01a5d53>] ext3_ordered_write_end+0x73/0x140 [ext3]
+    [<ffffffff810fa6c2>] generic_perform_write+0x122/0x1c0
+    [<ffffffff810fa7c1>] generic_file_buffered_write+0x61/0xa0
+    [<ffffffff810fd12f>] __generic_file_aio_write+0x20f/0x320
+    [<ffffffff810fd28c>] generic_file_aio_write+0x4c/0xb0
+    [<ffffffff8115dd17>] do_sync_write+0xd7/0x120
+    [<ffffffff8115e35e>] vfs_write+0xce/0x140
+    [<ffffffff8115e4d3>] sys_write+0x53/0xa0
+
+
+TODO:
+-----
+
+When run as root, dump the stack of all threads.
