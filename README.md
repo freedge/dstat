@@ -104,6 +104,42 @@ An *asynchronous* write blocked for some reason? (stable writeback pages?) Under
     [<ffffffff8115e4d3>] sys_write+0x53/0xa0
 
 
+Heavy writer getting throttled when hitting the dirty memory limits:
+
+    D          315 root     sleep_on_buffer   [kjournald]
+    D          321 root     get_request_wait  [flush-8:0]
+    D+        6229 root     -                 dd if=/dev/zero of=todel count=1000 bs=409600
+    Sat Jan 23 17:10:59 CET 2016
+    ===== 315
+    [<ffffffff8118c959>] sleep_on_buffer+0x9/0x10
+    [<ffffffffa0181a8e>] journal_commit_transaction+0x34e/0xe20 [jbd]
+    [<ffffffffa018632b>] kjournald+0xdb/0x230 [jbd]
+    ===== 321
+    [<ffffffff8122c9a9>] get_request_wait+0x119/0x1c0
+    [<ffffffff8122cbd6>] __make_request+0x186/0x420
+    [<ffffffff8122b2cb>] generic_make_request+0x45b/0x560
+    [<ffffffff8122b428>] submit_bio+0x58/0xf0
+    [<ffffffff8118b51f>] _submit_bh+0x11f/0x180
+    [<ffffffff8118d930>] __block_write_full_page+0x1d0/0x320
+    [<ffffffff8110523a>] __writepage+0xa/0x40
+    [<ffffffff811059a0>] write_cache_pages+0x210/0x460
+    [<ffffffff81105c38>] generic_writepages+0x48/0x70
+    [<ffffffff81183b31>] writeback_single_inode+0x171/0x360
+    [<ffffffff8118443e>] writeback_sb_inodes+0xee/0x1d0
+    [<ffffffff81184ca3>] writeback_inodes_wb+0xd3/0x160
+    [<ffffffff8118514b>] wb_writeback+0x41b/0x470
+    [<ffffffff8118531a>] wb_do_writeback+0x17a/0x250
+    [<ffffffff811854d4>] bdi_writeback_thread+0xe4/0x240
+    ===== 6229
+    [<ffffffff81106520>] balance_dirty_pages+0x310/0x580
+    [<ffffffff810fa6f3>] generic_perform_write+0x153/0x1c0
+    [<ffffffff810fa7c1>] generic_file_buffered_write+0x61/0xa0
+    [<ffffffff810fd12f>] __generic_file_aio_write+0x20f/0x320
+    [<ffffffff810fd28c>] generic_file_aio_write+0x4c/0xb0
+    [<ffffffff8115dd17>] do_sync_write+0xd7/0x120
+    [<ffffffff8115e35e>] vfs_write+0xce/0x140
+    [<ffffffff8115e4d3>] sys_write+0x53/0xa0
+
 TODO:
 -----
 
