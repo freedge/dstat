@@ -140,7 +140,16 @@ Heavy writer getting throttled when hitting the dirty memory limits:
     [<ffffffff8115e35e>] vfs_write+0xce/0x140
     [<ffffffff8115e4d3>] sys_write+0x53/0xa0
 
-TODO:
------
+Caveats:
+--------
 
-When run as root, dump the stack of all threads.
+This is a shell script. It itself spawn processes and consume a bit of memory.
+
+This is useful to investigate latency with ext3, but it will have some hard time
+with a system heavilly swapping for example. In that case you might use some
+other tool, such as:
+
+    echo t > /proc/sysrq-trigger
+
+
+
