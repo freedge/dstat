@@ -5,6 +5,11 @@ Tool to investigate what processes in uninterruptible state are doing
 Run every second for 1000 times and display the waiting channel of uninterruptible state, and the stack
 of the processes in uninterruptible state owned by the current user.
 
+
+	./chantime.sh dd if=/dev/zero of=zer count=10 bs=4096 conv=notrunc,fdatasync
+
+Sample a command and give timing information per waiting channel.
+
 Explanation:
 ------------
 
