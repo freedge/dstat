@@ -55,7 +55,21 @@ A synchronous write waiting for its pages to be written
     [<ffffffff810fcfae>] vfs_write+0xce/0x140
     [<ffffffff810fd123>] sys_write+0x53/0xa0
 
-An fdatasync doing its job:
+An fdatasync writing its pages:
+
+    D+       18212 root     sleep_on_page     dd if=/dev/zero of=zer count=1 bs=40960 conv=notrunc,fdatasync
+    ===== 18212
+    [<ffffffff810fb449>] sleep_on_page+0x9/0x10
+    [<ffffffff810fbbbc>] wait_on_page_bit+0x6c/0x80
+    [<ffffffff810fcbfb>] filemap_fdatawait_range+0xdb/0x150
+    [<ffffffff810fcd67>] filemap_write_and_wait_range+0x67/0x70
+    [<ffffffffa01a0577>] ext3_sync_file+0x77/0x190 [ext3]
+    [<ffffffff811895d2>] do_fsync+0x32/0x60
+    [<ffffffff8118960e>] sys_fdatasync+0xe/0x20
+    [<ffffffff8146f3f2>] system_call_fastpath+0x16/0x1b
+
+
+An fdatasync caught in a barrier
 
     D+       30819 freedge  blkdev_issue_flus dd if=/dev/zero of=todel count=10 bs=4096 conv=notrunc,fdatasync
     ===== 30819
