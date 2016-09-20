@@ -160,7 +160,7 @@ Heavy writer getting throttled when hitting the dirty memory limits:
     [<ffffffff8115e4d3>] sys_write+0x53/0xa0
 
 
-A vxfs file system stuck in a rename:
+A vxfs filesystem stuck in a rename:
 
     Dl        2907 devr     sleep_on_buffer   /a
     D        33223 root     sleep_on_buffer   [kjournald]
@@ -190,6 +190,23 @@ A vxfs file system stuck in a rename:
     [<ffffffff8116c328>] vfs_rename+0x118/0x200
     [<ffffffff8116edb4>] sys_renameat+0x2c4/0x2e0
     [<ffffffffa09bada7>] __sys_rename+0x157/0x300 [secfs2]
+
+A synchronous write on a vxfs filesystem:
+
+    DN+     585323 devm     vx_bc_biowait     dd if=/dev/zero of=out3 bs=4096 count=1000000 oflag=sync
+    Tue Sep 20 17:43:02 GMT 2016
+    ===== 585323
+    [<ffffffffa070eb20>] vx_bc_biowait+0x10/0x30 [vxfs]
+    [<ffffffffa059a829>] vx_biowait+0x9/0x30 [vxfs]
+    [<ffffffffa06e1284>] vx_logbuf_write+0x144/0x1c0 [vxfs]
+    [<ffffffffa06e148a>] vx_logbuf_io+0x18a/0x290 [vxfs]
+    [<ffffffffa06e233a>] vx_logflush+0xea/0x140 [vxfs]
+    [<ffffffffa0775050>] vx_tranidflush+0x120/0x220 [vxfs]
+    [<ffffffffa07a0a4f>] vx_write_common_fast+0x17f/0x200 [vxfs]
+    [<ffffffffa07a0f4c>] vx_write_common+0x47c/0x860 [vxfs]
+    [<ffffffffa0720ead>] vx_write+0x24d/0x370 [vxfs]
+    [<ffffffff8115f93e>] vfs_write+0xce/0x140
+    [<ffffffff8115fab3>] sys_write+0x53/0xa0
 
 
 Caveats:
