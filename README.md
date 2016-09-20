@@ -159,6 +159,39 @@ Heavy writer getting throttled when hitting the dirty memory limits:
     [<ffffffff8115e35e>] vfs_write+0xce/0x140
     [<ffffffff8115e4d3>] sys_write+0x53/0xa0
 
+
+A vxfs file system stuck in a rename:
+
+    Dl        2907 devr     sleep_on_buffer   /a
+    D        33223 root     sleep_on_buffer   [kjournald]
+    D        33237 root     get_request_wait  [kjournald]
+    D<s      69190 root     sleep_on_buffer   /o
+    D       243335 root     get_request_wait  [flush-199:23001]
+    Dl      496247 devr     sleep_on_buffer   /a
+    D       608715 devr     log_wait_commit   s
+    DN+     608852 devm     get_request_wait  mv b a
+    DN      608878 l        sleep_on_page     s
+    Tue Sep 20 17:13:32 GMT 2016
+    ===== 608852
+    [<ffffffff8122e2e9>] get_request_wait+0x119/0x1c0
+    [<ffffffff8122e516>] __make_request+0x186/0x420
+    [<ffffffff8122cbfb>] generic_make_request+0x45b/0x560
+    [<ffffffff8122cd74>] submit_bio+0x74/0x100
+    [<ffffffffa07717db>] vx_dev_strategy+0x35b/0x6f0 [vxfs]
+    [<ffffffffa06e12cd>] vx_logbuf_write+0x18d/0x1c0 [vxfs]
+    [<ffffffffa06e148a>] vx_logbuf_io+0x18a/0x290 [vxfs]
+    [<ffffffffa06e233a>] vx_logflush+0xea/0x140 [vxfs]
+    [<ffffffffa0775050>] vx_tranidflush+0x120/0x220 [vxfs]
+    [<ffffffffa078ab4b>] vx_int_rename+0x19fb/0x2f90 [vxfs]
+    [<ffffffffa078c6e4>] vx_do_rename+0x604/0x8b0 [vxfs]
+    [<ffffffffa078cd53>] vx_rename1+0x3c3/0x680 [vxfs]
+    [<ffffffffa068de66>] vx_rename+0x3c6/0x580 [vxfs]
+    [<ffffffff8116b18d>] vfs_rename_other+0xcd/0x120
+    [<ffffffff8116c328>] vfs_rename+0x118/0x200
+    [<ffffffff8116edb4>] sys_renameat+0x2c4/0x2e0
+    [<ffffffffa09bada7>] __sys_rename+0x157/0x300 [secfs2]
+
+
 Caveats:
 --------
 
