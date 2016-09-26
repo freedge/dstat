@@ -159,6 +159,113 @@ Heavy writer getting throttled when hitting the dirty memory limits:
     [<ffffffff8115e35e>] vfs_write+0xce/0x140
     [<ffffffff8115e4d3>] sys_write+0x53/0xa0
 
+Reading a file:
+
+    DN+     966292 devr     sleep_on_page_kil cat ../../D
+    Tue Sep 20 17:53:18 GMT 2016
+    ===== 966333
+    [<ffffffff810fba19>] sleep_on_page_killable+0x9/0x40
+    [<ffffffff810fbae6>] __lock_page_killable+0x96/0xd0
+    [<ffffffff810fcd27>] do_generic_file_read+0x227/0x490
+    [<ffffffff810fd9bc>] generic_file_aio_read+0xfc/0x260
+    [<ffffffff8115f417>] do_sync_read+0xd7/0x120
+    [<ffffffff8115fbc7>] vfs_read+0xc7/0x130
+    [<ffffffff8115fd33>] sys_read+0x53/0xa0
+
+
+A vxfs filesystem stuck in a rename:
+
+    Dl        2907 devr     sleep_on_buffer   /a
+    D        33223 root     sleep_on_buffer   [kjournald]
+    D        33237 root     get_request_wait  [kjournald]
+    D<s      69190 root     sleep_on_buffer   /o
+    D       243335 root     get_request_wait  [flush-199:23001]
+    Dl      496247 devr     sleep_on_buffer   /a
+    D       608715 devr     log_wait_commit   s
+    DN+     608852 devm     get_request_wait  mv b a
+    DN      608878 l        sleep_on_page     s
+    Tue Sep 20 17:13:32 GMT 2016
+    ===== 608852
+    [<ffffffff8122e2e9>] get_request_wait+0x119/0x1c0
+    [<ffffffff8122e516>] __make_request+0x186/0x420
+    [<ffffffff8122cbfb>] generic_make_request+0x45b/0x560
+    [<ffffffff8122cd74>] submit_bio+0x74/0x100
+    [<ffffffffa07717db>] vx_dev_strategy+0x35b/0x6f0 [vxfs]
+    [<ffffffffa06e12cd>] vx_logbuf_write+0x18d/0x1c0 [vxfs]
+    [<ffffffffa06e148a>] vx_logbuf_io+0x18a/0x290 [vxfs]
+    [<ffffffffa06e233a>] vx_logflush+0xea/0x140 [vxfs]
+    [<ffffffffa0775050>] vx_tranidflush+0x120/0x220 [vxfs]
+    [<ffffffffa078ab4b>] vx_int_rename+0x19fb/0x2f90 [vxfs]
+    [<ffffffffa078c6e4>] vx_do_rename+0x604/0x8b0 [vxfs]
+    [<ffffffffa078cd53>] vx_rename1+0x3c3/0x680 [vxfs]
+    [<ffffffffa068de66>] vx_rename+0x3c6/0x580 [vxfs]
+    [<ffffffff8116b18d>] vfs_rename_other+0xcd/0x120
+    [<ffffffff8116c328>] vfs_rename+0x118/0x200
+    [<ffffffff8116edb4>] sys_renameat+0x2c4/0x2e0
+    [<ffffffffa09bada7>] __sys_rename+0x157/0x300 [secfs2]
+
+A synchronous write on a vxfs filesystem:
+
+    DN+     585323 devm     vx_bc_biowait     dd if=/dev/zero of=out3 bs=4096 count=1000000 oflag=sync
+    Tue Sep 20 17:43:02 GMT 2016
+    ===== 585323
+    [<ffffffffa070eb20>] vx_bc_biowait+0x10/0x30 [vxfs]
+    [<ffffffffa059a829>] vx_biowait+0x9/0x30 [vxfs]
+    [<ffffffffa06e1284>] vx_logbuf_write+0x144/0x1c0 [vxfs]
+    [<ffffffffa06e148a>] vx_logbuf_io+0x18a/0x290 [vxfs]
+    [<ffffffffa06e233a>] vx_logflush+0xea/0x140 [vxfs]
+    [<ffffffffa0775050>] vx_tranidflush+0x120/0x220 [vxfs]
+    [<ffffffffa07a0a4f>] vx_write_common_fast+0x17f/0x200 [vxfs]
+    [<ffffffffa07a0f4c>] vx_write_common+0x47c/0x860 [vxfs]
+    [<ffffffffa0720ead>] vx_write+0x24d/0x370 [vxfs]
+    [<ffffffff8115f93e>] vfs_write+0xce/0x140
+    [<ffffffff8115fab3>] sys_write+0x53/0xa0
+
+A find blocked when reading directory entries on a vxfs filesystem:
+
+    DN+     690600 devm     vx_bc_biowait     find ../..
+    Tue Sep 20 17:47:03 GMT 2016
+    ===== 690600
+    [<ffffffffa070eb20>] vx_bc_biowait+0x10/0x30 [vxfs]
+    [<ffffffffa059af27>] vx_bread_bp+0xc7/0x250 [vxfs]
+    [<ffffffffa059b91d>] vx_getblk_cmn+0x17d/0x1d0 [vxfs]
+    [<ffffffffa059b991>] vx_getblk+0x21/0x30 [vxfs]
+    [<ffffffffa0630171>] vx_dirbread+0x261/0x440 [vxfs]
+    [<ffffffffa07296a1>] vx_readdir_int+0xcf1/0x12b0 [vxfs]
+    [<ffffffffa072af7a>] vx_readdir+0x41a/0x880 [vxfs]
+    [<ffffffff81171b92>] vfs_readdir+0xc2/0xe0
+    [<ffffffff81171c34>] sys_getdents64+0x84/0xe0
+    ...
+    DN+     690600 devm     vx_bc_biowait     find ../..
+    Tue Sep 20 17:48:52 GMT 2016
+    ===== 690600
+    [<ffffffffa070eb20>] vx_bc_biowait+0x10/0x30 [vxfs]
+    [<ffff8817ea3a0bc0>] 0xffff8817ea3a0bc0
+    [<ffffffffa07141fb>] vx_daccess+0x7b/0x2e0 [vxfs]
+    [<ffffffffa059b991>] vx_getblk+0x21/0x30 [vxfs]
+    [<ffffffffa0630171>] vx_dirbread+0x261/0x440 [vxfs]
+    [<ffffffffa07296a1>] vx_readdir_int+0xcf1/0x12b0 [vxfs]
+    [<ffffffff81171830>] filldir64+0x0/0xe0
+    [<ffffffffa072af7a>] vx_readdir+0x41a/0x880 [vxfs]
+    [<ffffffff81171830>] filldir64+0x0/0xe0
+    [<ffffffff81171830>] filldir64+0x0/0xe0
+    [<ffffffff81171b92>] vfs_readdir+0xc2/0xe0
+    [<ffffffff81171c34>] sys_getdents64+0x84/0xe0
+
+Reading a file on a vxfs filesystem:
+
+    DN+      17882 devm     lock_page         cat ./G
+    Tue Sep 20 17:56:43 GMT 2016
+    ===== 17882
+    [<ffffffff810fbbb3>] __lock_page+0x93/0xc0
+    [<ffffffffa076347d>] vx_segmap_getmap+0x5bd/0x870 [vxfs]
+    [<ffffffffa073d3fb>] vx_cache_read+0x18b/0x640 [vxfs]
+    [<ffffffffa073e201>] vx_read1+0x5d1/0x9f0 [vxfs]
+    [<ffffffffa071f3b9>] vx_vop_read+0xc9/0x120 [vxfs]
+    [<ffffffffa071fc27>] vx_read+0x217/0x650 [vxfs]
+    [<ffffffff8115fbc7>] vfs_read+0xc7/0x130
+    [<ffffffff8115fd33>] sys_read+0x53/0xa0
+
 Caveats:
 --------
 
